@@ -1,5 +1,6 @@
 package io.papermc.hangar.db.dao.internal.table;
 
+import io.papermc.hangar.config.CacheConfig;
 import io.papermc.hangar.model.common.Platform;
 import io.papermc.hangar.model.db.PlatformVersionTable;
 import java.util.Collection;
@@ -16,6 +17,8 @@ import org.jdbi.v3.sqlobject.customizer.BindBean;
 import org.jdbi.v3.sqlobject.customizer.Timestamped;
 import org.jdbi.v3.sqlobject.statement.SqlBatch;
 import org.jdbi.v3.sqlobject.statement.SqlQuery;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Repository;
 
 @Repository
@@ -24,10 +27,12 @@ import org.springframework.stereotype.Repository;
 public interface PlatformVersionDAO {
 
     @Timestamped
+    @CacheEvict(value = CacheConfig.PLATFORMS_FULL, allEntries = true)
     @SqlBatch("INSERT INTO platform_versions (created_at, platform, version) VALUES (:now, :platform, :version)")
     void insertAll(@BindBean Collection<PlatformVersionTable> platformVersionTables);
 
     @SqlBatch("DELETE FROM platform_versions WHERE id = :id")
+    @CacheEvict(value = CacheConfig.PLATFORMS_FULL, allEntries = true)
     void deleteAll(@BindBean Collection<PlatformVersionTable> platformVersionTables);
 
     @SqlQuery("SELECT * FROM platform_versions WHERE version = :version AND platform = :platform")
@@ -38,6 +43,7 @@ public interface PlatformVersionDAO {
     @SqlQuery("SELECT platform, (array_agg(version ORDER BY string_to_array(version, '.')::int[])) versions FROM platform_versions GROUP BY platform")
     TreeMap<Platform, List<String>> getVersions();
 
+    @Cacheable(CacheConfig.PLATFORMS_FULL)
     @SqlQuery("SELECT version FROM platform_versions WHERE platform = :platform ORDER BY string_to_array(version, '.')::int[]")
     List<String> getVersionsForPlatform(@EnumByOrdinal Platform platform);
 

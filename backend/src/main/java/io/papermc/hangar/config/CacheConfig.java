@@ -79,6 +79,9 @@ public class CacheConfig {
         return this.createCache(PROJECTS, Duration.ofHours(1), 10);
     }
 
+    @Bean(PLATFORMS_FULL)
+    Cache platformsFullCache() {return this.createCache(PLATFORMS_FULL, Duration.ofHours(12), 100);}
+
     @Bean(CATEGORIES)
     Cache categoriesCache() {
         return this.createCache(CATEGORIES, Duration.ofHours(1), 1);
